@@ -1,4 +1,4 @@
-Abstract
+# Abstract
 Clustering is a major research area in data science, enabling data grouping based on
 similarity metrics to enhance human interpretability. Given the self-augmenting knowledge
 demands of organizations in e-commerce, finance, healthcare, logistics, and other fields, the
@@ -15,32 +15,25 @@ may also compare other algorithms. The performance of these algorithms will be e
 the bases of clustering quality, scalability and efficiency, and interpretability, using methods like
 Silhouette Score, Adjusted Rand Index (ARI), and Normalized Mutual Information (NMI) as
 numeric quantifiers.
-Goal
+# Goal
 To evaluate the performance of commonly used clustering algorithms on datasets with
 distinct dimensional structures to understand their applicability, limitations, and clustering
 efficacy in high- and low-dimensional data contexts.
 
-Objectives
+# Objectives
 Data pre-processing:
-• The two starting datasets chosen are already cleaned and normalized, so there will be no
-need to map the text data onto word embedding vectors. However, this project will still
-perform PCA on the text data to vastly reduce its dimensions, with tests conducted to see
-what numbers of dimensions offer better clustering performance for different algorithms.
-• Reading of datasets from local files:
-o Python libraries used: HDF5, NumPy, pandas
+- The two starting datasets chosen are already cleaned and normalized, so there will be no need to map the text data onto word embedding vectors. However, this project will still perform PCA on the text data to vastly reduce its dimensions, with tests conducted to see what numbers of dimensions offer better clustering performance for different algorithms.
+- Reading of datasets from local files:
+	- Python libraries used: HDF5, NumPy, pandas
 Algorithm implementation:
-• Implementation + application of clustering algorithms:
-o Python libraries used: scikit-learn, matplotlib, NumPy, pandas
+- Implementation + application of clustering algorithms:
+	- Python libraries used: scikit-learn, matplotlib, NumPy, pandas
 Visualization and interpretation:
-• Representation of clustering on 1D (low-dimension) or 2D (high-dimension) projections,
-using t-SNE:
-o Python libraries used: matplotlib, NumPy
+- Representation of clustering on 1D (low-dimension) or 2D (high-dimension) projections, using t-SNE:
+	- Python libraries used: matplotlib, NumPy
 Performance evaluation:
-• This project will evaluate clustering results with numerical metrics (e.g. Silhouette Score,
-ARI, NMI).
-• After this, we will analyze how dimensionality and dataset structure impact clustering
-effectiveness and accuracy for each algorithm.
-
+- This project will evaluate clustering results with numerical metrics (e.g. Silhouette Score, ARI, NMI).
+- After this, we will analyze how dimensionality and dataset structure impact clustering effectiveness and accuracy for each algorithm.
 
 # References
 
