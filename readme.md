@@ -25,12 +25,15 @@ Data pre-processing:
 - The two starting datasets chosen are already cleaned and normalized, so there will be no need to map the text data onto word embedding vectors. However, this project will still perform PCA on the text data to vastly reduce its dimensions, with tests conducted to see what numbers of dimensions offer better clustering performance for different algorithms.
 - Reading of datasets from local files:
 	- Python libraries used: HDF5, NumPy, pandas
+
 Algorithm implementation:
 - Implementation + application of clustering algorithms:
 	- Python libraries used: scikit-learn, matplotlib, NumPy, pandas
+
 Visualization and interpretation:
 - Representation of clustering on 1D (low-dimension) or 2D (high-dimension) projections, using t-SNE:
 	- Python libraries used: matplotlib, NumPy
+
 Performance evaluation:
 - This project will evaluate clustering results with numerical metrics (e.g. Silhouette Score, ARI, NMI).
 - After this, we will analyze how dimensionality and dataset structure impact clustering effectiveness and accuracy for each algorithm.
