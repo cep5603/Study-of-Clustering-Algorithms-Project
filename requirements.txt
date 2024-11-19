@@ -1,0 +1,4 @@
+h5py==3.12.1
+matplotlib==3.9.2
+kneed==0.8.5
+scikit_learn==1.5.2
