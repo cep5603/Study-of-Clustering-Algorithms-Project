@@ -5,6 +5,10 @@ def test_clustering_algs(dataset, feature_count=2):
     mydbscan.cluster()
     mydbscan.plot()
 
+    mybirch = BIRCHClustering('scikit-BIRCH', dataset, feature_count)
+    mybirch.cluster()
+    mybirch.plot()
+
     # TODO: assign good k value
     mykmeans = kMeansClustering('scikit-KMEANS', dataset, feature_count)
     mykmeans.cluster()

@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import kneed  # https://kneed.readthedocs.io/en/stable/
 from sklearn.cluster import KMeans
 from sklearn.cluster import DBSCAN
+from sklearn.cluster import Birch
 from sklearn.neighbors import NearestNeighbors
 from sklearn.datasets import make_moons
 
@@ -87,3 +88,9 @@ class DBSCANClustering(ClusteringAlgorithm):
     def cluster(self):
         dbscan = DBSCAN(eps=self.epsilon, min_samples=self.min_pts)
         self.clusters = dbscan.fit_predict(self.dataset_2d.dataset)
+
+class BIRCHClustering(ClusteringAlgorithm):
+    # TODO: Params in init()
+    def cluster(self):
+        birch = Birch(n_clusters=None)
+        self.clusters = birch.fit_predict(self.dataset_2d.dataset)
