@@ -2,11 +2,13 @@ from abc import ABC, abstractmethod
 import h5py  # https://docs.h5py.org/en/stable/index.html
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 import kneed  # https://kneed.readthedocs.io/en/stable/
 from sklearn.cluster import KMeans
 from sklearn.cluster import DBSCAN
 from sklearn.cluster import Birch
 from sklearn.neighbors import NearestNeighbors
+from sklearn.metrics import silhouette_score
 from sklearn.datasets import make_moons
 
 # Class definitions
@@ -34,6 +36,28 @@ class Dataset:
         kneedle = kneed.KneeLocator(range(len(distances)), distances, curve='convex', direction='increasing')
         print(f'Epsilon value found: {distances[kneedle.knee]}\n')
         return distances[kneedle.knee]
+    
+    def get_k_value(self, max_k=10):
+        """
+        Determines the ideal number of clusters (k) using the elbow method.
+
+        Parameters:
+        max_k (int): Maximum number of clusters to test. Default is 10.
+
+        Returns:
+        int: The ideal number of clusters.
+        """
+        distortions = []
+        k_range = range(1, max_k + 1)
+
+        # Compute distortions for each k
+        for k in k_range:
+            kmeans = KMeans(n_clusters=k, random_state=42)
+            kmeans.fit(self.dataset)
+            distortions.append(kmeans.inertia_)
+
+        knee_locator = kneed.KneeLocator(k_range, distortions, curve='convex', direction='decreasing')
+        return knee_locator.knee or 1  # Default to 1 cluster if no knee is found
 
     def plot_k_distance_graph(self):
         # Visually plot k-distance graph, if desired
@@ -76,7 +100,8 @@ class ClusteringAlgorithm(ABC):
 
 class kMeansClustering(ClusteringAlgorithm):
     def cluster(self):
-        kmeans = KMeans(n_clusters=self.dim_count, random_state=self.seed)  # k-Means also uses a (separate) seed
+        k = self.dataset_2d.get_k_value()
+        kmeans = KMeans(n_clusters=k, random_state=self.seed)  # k-Means also uses a (separate) seed
         self.clusters = kmeans.fit_predict(self.dataset_2d.dataset)
 
 class DBSCANClustering(ClusteringAlgorithm):
@@ -92,5 +117,47 @@ class DBSCANClustering(ClusteringAlgorithm):
 class BIRCHClustering(ClusteringAlgorithm):
     # TODO: Params in init()
     def cluster(self):
-        birch = Birch(n_clusters=None)
+        # TODO: Other values for threshold/bf
+        thresholds = np.linspace(0.1, 1.0, 10)
+        branching_factors = range(10, 101, 10)
+
+        results = self.optimize_birch(thresholds, branching_factors)
+        print("Best Score:", results['best_score'])
+        print("Best Parameters:", results['best_params'])
+
+        birch = Birch(
+            threshold=results['best_params']['threshold'],
+            branching_factor=results['best_params']['branching_factor']
+        )
+
         self.clusters = birch.fit_predict(self.dataset_2d.dataset)
+
+    def optimize_birch(self, thresholds, branching_factors):
+        """
+        Optimizes the Birch clustering algorithm parameters: threshold and branching_factor.
+
+        Parameters:
+        thresholds (list): List of threshold values to test.
+        branching_factors (list): List of branching factor values to test.
+
+        Returns:
+        dict: Best parameters and corresponding silhouette score.
+        """
+        best_score = -1
+        best_params = {'threshold': None, 'branching_factor': None}
+
+        for threshold in thresholds:
+            for branching_factor in branching_factors:
+                # Initialize BIRCH
+                birch = Birch(threshold=threshold, branching_factor=branching_factor)
+                clusters = birch.fit_predict(self.dataset_2d.dataset)
+
+                # Skip if fewer than 2 clusters (silhouette score is undefined)
+                if len(np.unique(clusters)) > 1:
+                    score = silhouette_score(self.dataset_2d.dataset, clusters)
+                    if score > best_score:
+                        best_score = score
+                        best_params['threshold'] = threshold
+                        best_params['branching_factor'] = branching_factor
+
+        return {'best_score': best_score, 'best_params': best_params}

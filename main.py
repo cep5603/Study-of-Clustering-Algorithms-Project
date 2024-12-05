@@ -1,18 +1,42 @@
 from clustering446 import *
 
+def evaluate_clustering(dataset, labels):
+    """
+    Evaluates clustering performance using silhouette score.
+
+    Parameters:
+    dataset (ndarray): The dataset, where rows are samples and columns are features.
+    labels (ndarray): Cluster labels assigned to each sample.
+
+    Returns:
+    float: Silhouette score, or -1 if only one cluster is present.
+    """
+    # Silhouette score is undefined for single-cluster or unclustered data
+    unique_labels = np.unique(labels)
+    if len(unique_labels) < 2:
+        return -1  # Indicates invalid clustering for this metric
+
+    # Compute the silhouette score
+    return silhouette_score(dataset, labels)
+
 def test_clustering_algs(dataset, feature_count=2):
-    mydbscan = DBSCANClustering('scikit-DBSCAN', dataset, feature_count)
-    mydbscan.cluster()
-    mydbscan.plot()
+    clustering_algorithms = {
+        'KMeans': DBSCANClustering('scikit-DBSCAN', dataset, feature_count),
+        'DBSCAN': BIRCHClustering('scikit-BIRCH', dataset, feature_count),
+        'Birch': kMeansClustering('scikit-KMEANS', dataset, feature_count)
+    }
+    
+    results = {}
+    for name, algorithm in clustering_algorithms.items():
+        algorithm.cluster()
+        algorithm.plot()
+        labels = algorithm.clusters
+        score = evaluate_clustering(dataset.dataset, labels)
+        results[name] = score
 
-    mybirch = BIRCHClustering('scikit-BIRCH', dataset, feature_count)
-    mybirch.cluster()
-    mybirch.plot()
-
-    # TODO: assign good k value
-    mykmeans = kMeansClustering('scikit-KMEANS', dataset, feature_count)
-    mykmeans.cluster()
-    mykmeans.plot()
+    print('\nPERFORMANCE METRICS:\n')
+    for method, score in results.items():
+        print(f"{method}: Silhouette Score = {score:.3f}")
 
     plt.show()
 
