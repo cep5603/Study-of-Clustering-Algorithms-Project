@@ -46,8 +46,13 @@ def test_2d_moon_dataset():
     moons_dataset = moons.make_moon_dataset(False)
     test_clustering_algs(moons)
 
+def test_2d_blobs_dataset():
+    blobs = Dataset(None)
+    blobs_dataset = blobs.make_blobs_dataset()
+    test_clustering_algs(blobs)
+
 def test_2d_coord_dataset():
-    # Set an arbitrary limit to minimize computation time (full small dataset has 1048575 rows)
+    # Set an arbitrary limit to minimize computation time (full small dataset has 1,048,575 rows)
     # DBSCAN does worse the higher this is (for this early implementation)
     limit = 500
     
@@ -67,4 +72,5 @@ def test_2d_coord_dataset():
 
 if __name__ == '__main__':
     #test_2d_moon_dataset()
-    test_2d_coord_dataset()
+    test_2d_blobs_dataset()
+    #test_2d_coord_dataset()

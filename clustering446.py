@@ -10,6 +10,7 @@ from sklearn.cluster import Birch
 from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics import silhouette_score
 from sklearn.datasets import make_moons
+from sklearn.datasets import make_blobs
 
 # Class definitions
 
@@ -75,6 +76,10 @@ class Dataset:
             self.plot_k_distance_graph()
 
         # Assign to self and return data for now
+        return self.dataset
+    
+    def make_blobs_dataset(self):
+        self.dataset, _ = make_blobs(n_samples=100, centers=3, n_features=2,random_state=self.seed)
         return self.dataset
 
 class ClusteringAlgorithm(ABC):
