@@ -1,24 +1,5 @@
 from clustering446 import *
 
-'''def evaluate_clustering(dataset, labels):
-    """
-    Evaluates clustering performance using silhouette score.
-
-    Parameters:
-    dataset (ndarray): The dataset, where rows are samples and columns are features.
-    labels (ndarray): Cluster labels assigned to each sample.
-
-    Returns:
-    float: Silhouette score, or -1 if only one cluster is present.
-    """
-    # Silhouette score is undefined for single-cluster or unclustered data
-    unique_labels = np.unique(labels)
-    if len(unique_labels) < 2:
-        return -1  # Indicates invalid clustering for this metric
-
-    # Compute the silhouette score
-    return silhouette_score(dataset, labels)'''
-
 from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
 import numpy as np
 
@@ -90,6 +71,6 @@ def test_2d_coord_dataset(limit):
     test_clustering_algs(coord_object)
 
 if __name__ == '__main__':
-    test_2d_moon_dataset()
+    #test_2d_moon_dataset()
     #test_2d_blobs_dataset()
-    #test_2d_coord_dataset(500)
+    test_2d_coord_dataset(500)
