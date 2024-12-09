@@ -21,9 +21,17 @@ class Dataset:
         self.k = 5
         self.dataset = dataset
 
-    def pca(self):
-        # TODO: Feature reduction on high-dimensional data (see t-SNE)
-        pass
+    def pca(self, X=np.array([]), no_dims=50):
+        """
+        Runs PCA on the NxD array X in order to reduce its dimensionality to
+        no_dims dimensions.
+        """
+
+        (n, d) = X.shape
+        X = X - np.tile(np.mean(X, 0), (n, 1))
+        (l, M) = np.linalg.eig(np.dot(X.T, X))
+        Y = np.dot(X, M[:, 0:no_dims])
+        return Y
     
     def get_k_nearest_neighbors_distances(self):
         neigh = NearestNeighbors(n_neighbors=self.k)
@@ -152,6 +160,8 @@ class BIRCHClustering(ClusteringAlgorithm):
         Returns:
         dict: Best parameters and corresponding silhouette score.
         """
+        print('Optimizing parameters for BIRCH (this can take some time!)')
+
         best_score = -1
         best_params = {'threshold': None, 'branching_factor': None}
 

@@ -70,7 +70,17 @@ def test_2d_coord_dataset(limit):
     coord_object = Dataset(coords_subset)
     test_clustering_algs(coord_object)
 
+def test_mnist_dataset(dims_after_pca):
+    mnist_values = np.loadtxt("data/tsne_python/mnist2500_X.txt")
+    mnist_labels = np.loadtxt("data/tsne_python/mnist2500_labels.txt")
+    mnist_dataset = Dataset(None)
+    reduced_dataset = mnist_dataset.pca(mnist_values, 2).real
+    mnist_dataset.dataset = reduced_dataset
+    print('Finished PCA')
+    test_clustering_algs(mnist_dataset)
+
 if __name__ == '__main__':
     #test_2d_moon_dataset()
     #test_2d_blobs_dataset()
-    test_2d_coord_dataset(500)
+    #test_2d_coord_dataset(500)
+    test_mnist_dataset(2)
