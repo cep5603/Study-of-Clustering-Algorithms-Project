@@ -22,7 +22,7 @@ def test_clustering_algs(dataset, feature_count=2):
     clustering_algorithms = {
         'KMeans': kMeansClustering('scikit-KMEANS', dataset, feature_count),
         'DBSCAN': DBSCANClustering('scikit-DBSCAN', dataset, feature_count),
-        'BIRCH': BIRCHClustering('scikit-BIRCH', dataset, feature_count)
+        'BIRCH': BIRCHClustering('scikit-BIRCH', dataset, feature_count)#, 0.3, 10, 2)
     }
     
     results = {}
@@ -33,12 +33,12 @@ def test_clustering_algs(dataset, feature_count=2):
         scores = evaluate_clustering(dataset.dataset, labels)
         results[name] = scores
 
-    print('\n================\nPERFORMANCE METRICS:\n================')
+    print('====================\nPERFORMANCE METRICS:\n====================')
     metrics = results['KMeans'].keys()  # Just get metrics from KMeans
     for metric in metrics:
         print(f'\nMetric: {metric}')
         for alg, scores in results.items():
-            print(f'{alg}: {scores[metric]}')
+            print(f'{alg}: {scores[metric]:.3f}')
 
     plt.show()
 
@@ -62,10 +62,6 @@ def test_2d_coord_dataset(limit):
 
         coords_dataset = file[coords_key]
         coords_subset = coords_dataset[:limit]
-        
-        # Displaying some data
-        #for i in range(limit):
-        #    print(f'Coord #{i}: {coords_subset[i]}')
 
     coord_object = Dataset(coords_subset)
     test_clustering_algs(coord_object)
@@ -74,13 +70,13 @@ def test_mnist_dataset(dims_after_pca):
     mnist_values = np.loadtxt("data/tsne_python/mnist2500_X.txt")
     mnist_labels = np.loadtxt("data/tsne_python/mnist2500_labels.txt")
     mnist_dataset = Dataset(None)
-    reduced_dataset = mnist_dataset.pca(mnist_values, 2).real
+    reduced_dataset = mnist_dataset.pca(mnist_values, dims_after_pca).real
     mnist_dataset.dataset = reduced_dataset
-    print('Finished PCA')
+    print(f'Finished PCA ({len(mnist_values)} -> {dims_after_pca} dimensions)')
     test_clustering_algs(mnist_dataset)
 
 if __name__ == '__main__':
     #test_2d_moon_dataset()
     #test_2d_blobs_dataset()
-    #test_2d_coord_dataset(500)
-    test_mnist_dataset(2)
+    test_2d_coord_dataset(1000)
+    #test_mnist_dataset(20)

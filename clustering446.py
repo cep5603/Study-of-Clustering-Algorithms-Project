@@ -69,11 +69,10 @@ class Dataset:
         return self.dataset
 
 class ClusteringAlgorithm(ABC):
-    def __init__(self, name, dataset_2d, dim_count):
+    def __init__(self, name, stored_dataset, dim_count):
         self.seed = 100
         self.name = name
-        #self.params = params  # TODO
-        self.dataset_2d = dataset_2d
+        self.stored_dataset = stored_dataset
         self.dim_count = dim_count
 
     @abstractmethod
@@ -83,17 +82,21 @@ class ClusteringAlgorithm(ABC):
     def plot(self):
         # Visualize the clusters
         plt.figure(figsize=(10, 6))
-        scatter = plt.scatter(self.dataset_2d.dataset[:, 0], self.dataset_2d.dataset[:, 1], c=self.clusters, cmap='viridis')
+        scatter = plt.scatter(self.stored_dataset.dataset[:, 0], self.stored_dataset.dataset[:, 1], c=self.clusters, cmap='viridis')
         plt.colorbar(scatter)
         plt.title(f'{self.name} Clustering Results')
         plt.xlabel('Feature 1')
         plt.ylabel('Feature 2')
 
 class kMeansClustering(ClusteringAlgorithm):
+    def __init__(self, name, stored_dataset, dim_count, num_clusters = None):
+        super().__init__(name, stored_dataset, dim_count)
+        self.num_clusters = num_clusters
     def cluster(self):
-        k = self.get_k_value(self.dataset_2d.dataset)
-        kmeans = KMeans(n_clusters=k, random_state=self.seed)  # k-Means also uses a (separate) seed
-        self.clusters = kmeans.fit_predict(self.dataset_2d.dataset)
+        if self.num_clusters is None:
+            self.num_clusters = self.get_k_value(self.stored_dataset.dataset)
+        kmeans = KMeans(n_clusters=self.num_clusters, random_state=self.seed)  # k-Means also uses a (separate) seed
+        self.clusters = kmeans.fit_predict(self.stored_dataset.dataset)
 
     def get_k_value(self, dataset, max_k=10):
         """
@@ -110,7 +113,7 @@ class kMeansClustering(ClusteringAlgorithm):
 
         # Compute distortions for each k
         for k in k_range:
-            kmeans = KMeans(n_clusters=k, random_state=42)
+            kmeans = KMeans(n_clusters=k, random_state=self.seed)
             kmeans.fit(dataset)
             distortions.append(kmeans.inertia_)
 
@@ -118,36 +121,49 @@ class kMeansClustering(ClusteringAlgorithm):
         return knee_locator.knee or 1  # Default to 1 cluster if no knee is found
 
 class DBSCANClustering(ClusteringAlgorithm):
-    def __init__(self, name, dataset_2d, dim_count):
-        super().__init__(name, dataset_2d, dim_count)
+    def __init__(self, name, stored_dataset, dim_count, sensitivity = 2):
+        super().__init__(name, stored_dataset, dim_count)
         # For now, can adjust sensitivity here
-        sensitivity = 2
-        self.epsilon = self.dataset_2d.get_epsilon(sensitivity)
+        self.epsilon = self.stored_dataset.get_epsilon(sensitivity)
         self.min_pts = self.dim_count * 2 + 1
 
     def cluster(self):
         dbscan = DBSCAN(eps=self.epsilon, min_samples=self.min_pts)
-        self.clusters = dbscan.fit_predict(self.dataset_2d.dataset)
+        self.clusters = dbscan.fit_predict(self.stored_dataset.dataset)
 
 class BIRCHClustering(ClusteringAlgorithm):
-    # TODO: Params in init()
+    def __init__(self, name, stored_dataset, dim_count, threshold=None, branching_factor=None, num_clusters=None):
+        super().__init__(name, stored_dataset, dim_count)
+        self.threshold = threshold
+        self.branching_factor = branching_factor
+        self.num_clusters = num_clusters
+
     def cluster(self):
-        # Possible values here are done to limit computation; better values may be outside of these ranges
-        thresholds = np.linspace(0.1, 1.0, 10)
-        branching_factors = range(10, 101, 10)
-        num_clusters = range(2, 10)
+        # Just check for all 3 for simplicity
+        if self.threshold is not None and self.branching_factor is not None and self.num_clusters is not None:
+            birch = Birch(
+                threshold=self.threshold,
+                branching_factor=self.branching_factor,
+                n_clusters=self.num_clusters
+            )
+        else:
+            # Possible values here are done to limit computation; better values may be outside of these ranges
+            thresholds = np.linspace(0.1, 1.0, 10)
+            branching_factors = range(10, 101, 10)
+            num_clusters = range(2, 10)
 
-        results = self.optimize_birch(thresholds, branching_factors, num_clusters)
-        print("BIRCH Best Score:", results['best_score'])
-        print("BIRCH Best Parameters:", results['best_params'])
+            results = self.optimize_birch(thresholds, branching_factors, num_clusters)
+            print("BIRCH Best Score:", results['best_score'])
+            print("BIRCH Best Parameters:", results['best_params'])
+            print()
 
-        birch = Birch(
-            threshold=results['best_params']['threshold'],
-            branching_factor=results['best_params']['branching_factor'],
-            n_clusters=results['best_params']['num_clusters']
-        )
+            birch = Birch(
+                threshold=results['best_params']['threshold'],
+                branching_factor=results['best_params']['branching_factor'],
+                n_clusters=results['best_params']['num_clusters']
+            )
 
-        self.clusters = birch.fit_predict(self.dataset_2d.dataset)
+        self.clusters = birch.fit_predict(self.stored_dataset.dataset)
 
     def optimize_birch(self, thresholds, branching_factors, num_clusters):
         """
@@ -170,11 +186,11 @@ class BIRCHClustering(ClusteringAlgorithm):
                 for num_cluster in num_clusters:
                     # Initialize BIRCH
                     birch = Birch(threshold=threshold, branching_factor=branching_factor, n_clusters=num_cluster)
-                    clusters = birch.fit_predict(self.dataset_2d.dataset)
+                    clusters = birch.fit_predict(self.stored_dataset.dataset)
 
                     # Skip if fewer than 2 clusters (silhouette score is undefined)
                     if len(np.unique(clusters)) > 1:
-                        score = silhouette_score(self.dataset_2d.dataset, clusters)
+                        score = silhouette_score(self.stored_dataset.dataset, clusters)
                         if score > best_score:
                             best_score = score
                             best_params['threshold'] = threshold
