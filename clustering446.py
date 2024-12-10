@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import kneed  # https://kneed.readthedocs.io/en/stable/
-from sklearn.cluster import KMeans, DBSCAN, Birch
+import sklearn.cluster
 from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
 from sklearn.datasets import make_moons, make_blobs
@@ -43,11 +43,11 @@ class Dataset:
     def get_epsilon(self, sensitivity, plot_k_graph = False):
         # Use kneed to get "good" epsilon value from elbow in k-distances graph
         distances = self.get_k_nearest_neighbors_distances()
+        kneedle = kneed.KneeLocator(range(len(distances)), distances, curve='convex', direction='increasing', S=sensitivity)
+        print(f'(H)DBSCAN epsilon value: {kneedle.elbow_y}\n')
         if (plot_k_graph):
             self.plot_k_distance_graph()
-        kneedle = kneed.KneeLocator(range(len(distances)), distances, curve='convex', direction='increasing', S=sensitivity)
-        print(f'DBSCAN epsilon value: {kneedle.elbow_y}\n')
-        #kneedle.plot_knee_normalized()
+            kneedle.plot_knee_normalized()
         return distances[kneedle.knee]
 
     def plot_k_distance_graph(self):
@@ -95,7 +95,9 @@ class kMeansClustering(ClusteringAlgorithm):
     def cluster(self):
         if self.num_clusters is None:
             self.num_clusters = self.get_k_value(self.stored_dataset.dataset)
-        kmeans = KMeans(n_clusters=self.num_clusters, random_state=self.seed)  # k-Means also uses a (separate) seed
+        
+        print('Clustering KMeans . . .')
+        kmeans = sklearn.cluster.KMeans(n_clusters=self.num_clusters, random_state=self.seed)
         self.clusters = kmeans.fit_predict(self.stored_dataset.dataset)
 
     def get_k_value(self, dataset, max_k=10):
@@ -108,12 +110,13 @@ class kMeansClustering(ClusteringAlgorithm):
         Returns:
         int: The ideal number of clusters.
         """
+        print('Optimizing KMeans . . .')
         distortions = []
         k_range = range(1, max_k + 1)
 
         # Compute distortions for each k
         for k in k_range:
-            kmeans = KMeans(n_clusters=k, random_state=self.seed)
+            kmeans = sklearn.cluster.KMeans(n_clusters=k, random_state=self.seed)
             kmeans.fit(dataset)
             distortions.append(kmeans.inertia_)
 
@@ -128,7 +131,8 @@ class DBSCANClustering(ClusteringAlgorithm):
         self.min_pts = self.dim_count * 2 + 1
 
     def cluster(self):
-        dbscan = DBSCAN(eps=self.epsilon, min_samples=self.min_pts)
+        print('Clustering DBSCAN . . .')
+        dbscan = sklearn.cluster.DBSCAN(eps=self.epsilon, min_samples=self.min_pts)
         self.clusters = dbscan.fit_predict(self.stored_dataset.dataset)
 
 class BIRCHClustering(ClusteringAlgorithm):
@@ -141,7 +145,7 @@ class BIRCHClustering(ClusteringAlgorithm):
     def cluster(self):
         # Just check for all 3 for simplicity
         if self.threshold is not None and self.branching_factor is not None and self.num_clusters is not None:
-            birch = Birch(
+            birch = sklearn.cluster.Birch(
                 threshold=self.threshold,
                 branching_factor=self.branching_factor,
                 n_clusters=self.num_clusters
@@ -157,12 +161,13 @@ class BIRCHClustering(ClusteringAlgorithm):
             print("BIRCH Best Parameters:", results['best_params'])
             print()
 
-            birch = Birch(
+            birch = sklearn.cluster.Birch(
                 threshold=results['best_params']['threshold'],
                 branching_factor=results['best_params']['branching_factor'],
                 n_clusters=results['best_params']['num_clusters']
             )
 
+        print('Clustering BIRCH . . .')
         self.clusters = birch.fit_predict(self.stored_dataset.dataset)
 
     def optimize_birch(self, thresholds, branching_factors, num_clusters):
@@ -179,13 +184,13 @@ class BIRCHClustering(ClusteringAlgorithm):
         print('Optimizing parameters for BIRCH (this can take some time!)')
 
         best_score = -1
-        best_params = {'threshold': None, 'branching_factor': None}
+        best_params = {'threshold': None, 'branching_factor': None, 'num_clusters': None}
 
         for threshold in thresholds:
             for branching_factor in branching_factors:
                 for num_cluster in num_clusters:
                     # Initialize BIRCH
-                    birch = Birch(threshold=threshold, branching_factor=branching_factor, n_clusters=num_cluster)
+                    birch = sklearn.cluster.Birch(threshold=threshold, branching_factor=branching_factor, n_clusters=num_cluster)
                     clusters = birch.fit_predict(self.stored_dataset.dataset)
 
                     # Skip if fewer than 2 clusters (silhouette score is undefined)
@@ -198,3 +203,46 @@ class BIRCHClustering(ClusteringAlgorithm):
                             best_params['num_clusters'] = num_cluster
 
         return {'best_score': best_score, 'best_params': best_params}
+
+class SpectralClustering(ClusteringAlgorithm):
+    def __init__(self, name, stored_dataset, dim_count, num_clusters=None):
+        super().__init__(name, stored_dataset, dim_count)
+        self.num_clusters = num_clusters
+
+    def cluster(self):
+        if self.num_clusters is None:
+            self.num_clusters = self.optimize_spectral()
+        
+        print('Clustering Spectral . . .')
+        spectral = sklearn.cluster.SpectralClustering(n_clusters=self.num_clusters, random_state=self.seed)
+        self.clusters = spectral.fit_predict(self.stored_dataset.dataset)
+
+    def optimize_spectral(self):
+        print('Optimizing parameters for Spectral Clustering')
+        num_clusters = range(2, 20)
+        best_cluster_count = None
+        best_score = -1
+
+        for num_cluster in num_clusters:
+            spectral = sklearn.cluster.SpectralClustering(n_clusters=num_cluster, random_state=self.seed)
+            clusters = spectral.fit_predict(self.stored_dataset.dataset)
+
+            # Skip if fewer than 2 clusters (silhouette score is undefined)
+            if len(np.unique(clusters)) > 1:
+                score = silhouette_score(self.stored_dataset.dataset, clusters)
+                #print(f'Cluster count {num_cluster} has score {score}')
+                if score > best_score:
+                    best_score = score
+                    best_cluster_count = num_cluster
+
+        print(f'Optimal number of clusters for spectral: {best_cluster_count}')
+        return best_cluster_count
+
+class HDBSCAN(ClusteringAlgorithm):
+    def __init__(self, name, stored_dataset, dim_count):
+        super().__init__(name, stored_dataset, dim_count)
+
+    def cluster(self):
+        print('Clustering HDBSCAN . . .')
+        hdbscan = sklearn.cluster.HDBSCAN()
+        self.clusters = hdbscan.fit_predict(self.stored_dataset.dataset)
