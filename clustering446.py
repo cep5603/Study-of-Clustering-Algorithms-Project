@@ -44,7 +44,7 @@ class Dataset:
         # Use kneed to get "good" epsilon value from elbow in k-distances graph
         distances = self.get_k_nearest_neighbors_distances()
         kneedle = kneed.KneeLocator(range(len(distances)), distances, curve='convex', direction='increasing', S=sensitivity)
-        print(f'(H)DBSCAN epsilon value: {kneedle.elbow_y}\n')
+        print(f'DBSCAN epsilon value: {kneedle.elbow_y:.3f} with sensitivity {sensitivity}\n')
         if (plot_k_graph):
             self.plot_k_distance_graph()
             kneedle.plot_knee_normalized()
@@ -127,7 +127,7 @@ class DBSCANClustering(ClusteringAlgorithm):
     def __init__(self, name, stored_dataset, dim_count, sensitivity = 2):
         super().__init__(name, stored_dataset, dim_count)
         # For now, can adjust sensitivity here
-        self.epsilon = self.stored_dataset.get_epsilon(sensitivity)
+        self.epsilon = self.stored_dataset.get_epsilon(sensitivity, False)
         self.min_pts = self.dim_count * 2 + 1
 
     def cluster(self):
@@ -230,7 +230,7 @@ class SpectralClustering(ClusteringAlgorithm):
             # Skip if fewer than 2 clusters (silhouette score is undefined)
             if len(np.unique(clusters)) > 1:
                 score = silhouette_score(self.stored_dataset.dataset, clusters)
-                #print(f'Cluster count {num_cluster} has score {score}')
+                print(f'Cluster count {num_cluster} has score {score}')
                 if score > best_score:
                     best_score = score
                     best_cluster_count = num_cluster
