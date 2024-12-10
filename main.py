@@ -17,10 +17,10 @@ def evaluate_clustering(dataset, labels):
 
 def test_clustering_algs(dataset, feature_count=2):
     clustering_algorithms = {
-        'KMeans': kMeansClustering('scikit-KMEANS', dataset, feature_count, 2),
+        'KMeans': kMeansClustering('scikit-KMEANS', dataset, feature_count),
         'DBSCAN': DBSCANClustering('scikit-DBSCAN', dataset, feature_count, 1),
-        'BIRCH': BIRCHClustering('scikit-BIRCH', dataset, feature_count, 0.2, 8, 2),
-        'Spectral': SpectralClustering('scikit-SpectralClustering', dataset, feature_count, 2),
+        'BIRCH': BIRCHClustering('scikit-BIRCH', dataset, feature_count),
+        'Spectral': SpectralClustering('scikit-SpectralClustering', dataset, feature_count),
         'HDBSCAN': HDBSCAN('scikit-HDBSCAN', dataset, feature_count)
     }
     
@@ -91,7 +91,7 @@ def test_mnist_dataset(dims_after_pca):
     test_clustering_algs(mnist_dataset)
 
 if __name__ == '__main__':
-    #test_2d_moon_dataset()
     #test_2d_blobs_dataset()
-    #test_2d_coord_dataset(1000)
+    #test_2d_moon_dataset()
+    #test_2d_coord_dataset(500)
     test_mnist_dataset(20)
