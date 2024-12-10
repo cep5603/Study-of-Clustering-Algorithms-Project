@@ -18,16 +18,9 @@ def evaluate_clustering(dataset, labels):
 def test_clustering_algs(dataset, feature_count=2):
     clustering_algorithms = {
         'KMeans': kMeansClustering('scikit-KMEANS', dataset, feature_count),
-        'DBSCAN': DBSCANClustering('scikit-DBSCAN', dataset, feature_count, 1),
+        'DBSCAN': DBSCANClustering('scikit-DBSCAN', dataset, feature_count, 1),  # On blobs, can compare sensitivity (0.5, 1, 5)
         'BIRCH': BIRCHClustering('scikit-BIRCH', dataset, feature_count),
         'Spectral': SpectralClustering('scikit-SpectralClustering', dataset, feature_count),
-        'HDBSCAN': HDBSCAN('scikit-HDBSCAN', dataset, feature_count)
-    }
-    
-    clustering_algorithms_for_mnist_demo = {
-        'KMeans': kMeansClustering('scikit-KMEANS', dataset, feature_count),
-        'DBSCAN': DBSCANClustering('scikit-DBSCAN', dataset, feature_count),
-        'BIRCH': BIRCHClustering('scikit-BIRCH', dataset, feature_count, 1, 30, 2),
         'HDBSCAN': HDBSCAN('scikit-HDBSCAN', dataset, feature_count)
     }
 
@@ -39,8 +32,15 @@ def test_clustering_algs(dataset, feature_count=2):
         'HDBSCAN': HDBSCAN('scikit-HDBSCAN', dataset, feature_count)
     }
     
+    clustering_algorithms_for_mnist_demo = {
+        'KMeans': kMeansClustering('scikit-KMEANS', dataset, feature_count),
+        'DBSCAN': DBSCANClustering('scikit-DBSCAN', dataset, feature_count),
+        'BIRCH': BIRCHClustering('scikit-BIRCH', dataset, feature_count, 1, 30, 2),
+        'HDBSCAN': HDBSCAN('scikit-HDBSCAN', dataset, feature_count)
+    }
+
     results = {}
-    for name, algorithm in clustering_algorithms_for_mnist_demo.items():
+    for name, algorithm in clustering_algorithms.items():
         algorithm.cluster()
         algorithm.plot()
         labels = algorithm.clusters
@@ -91,7 +91,7 @@ def test_mnist_dataset(dims_after_pca):
     test_clustering_algs(mnist_dataset)
 
 if __name__ == '__main__':
-    #test_2d_blobs_dataset()
+    test_2d_blobs_dataset()
     #test_2d_moon_dataset()
     #test_2d_coord_dataset(500)
-    test_mnist_dataset(20)
+    #test_mnist_dataset(20)
